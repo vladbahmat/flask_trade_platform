@@ -7,3 +7,11 @@ class UserSerializer(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CurrencySerializer(BaseModel):
+    name:str
+    code:str
+
+    class Config:
+        orm_mode = True
