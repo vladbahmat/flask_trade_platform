@@ -14,6 +14,7 @@ flasgger = "*"
 flask-blueprint = "*"
 flask-jwt = "*"
 flask-jwt-extended = "*"
+pydantic = "*"
 
 [dev-packages]
 

@@ -22,20 +22,18 @@ swagger_config = {
 }
 
 def register_flask_bluenprint(app):
-    from user import api as api_bp
-    app.register_blueprint(api_bp, url_prefix='/api')
+    from trade_platform import rest_api as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
 
 app = Flask(__name__)
-print('вызов')
-app.config['SWAGGER'] = {"title": "Flask-S1", "Flask-S2": 1}
+app.config['SECRET_KEY'] = 'e5a605cc-56d9-497e-a7ef-6982797f8ee8'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Lipetsk4859@localhost:5432/flask_trade_platform'
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-swagger = Swagger(app=app)
 migrate = Migrate(app, db)
 register_flask_bluenprint(app)
 
+swagger = Swagger(app=app)
 
 if __name__ == '__main__':
-    #flask_app = register_app()
     app.run(debug=True)

@@ -1,4 +1,4 @@
 # from app import api
-# from user.views import HelloWorld
+# from trade_platform.views import HelloWorld
 #
 # api.add_resource(HelloWorld, '/')
