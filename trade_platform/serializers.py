@@ -15,3 +15,22 @@ class CurrencySerializer(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CurrencyRetrieveSerializer(BaseModel):
+    id:int
+    name:str
+    code:str
+
+    class Config:
+        orm_mode = True
+
+
+class ProfileSerializer(BaseModel):
+    id:int
+    user: UserSerializer
+    currency: CurrencySerializer
+
+    class Config:
+        orm_mode = True
+

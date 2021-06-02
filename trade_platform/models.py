@@ -3,18 +3,19 @@ from flask_sqlalchemy import BaseQuery
 from app import db
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
+from trade_platform.basic_model import BasicModel
 
-class Currency(db.Model):
+class Currency(db.Model, BasicModel):
     __tablename__ = 'currency'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(5), unique=True)
     name = db.Column(db.String(20), unique=True)
 
 
-class User(db.Model):
+class User(db.Model, BasicModel):
     __tablename__  = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     profile = db.relationship("Profile", uselist=False, back_populates="user")
@@ -40,7 +41,7 @@ class User(db.Model):
         return user
 
 
-class Profile(db.Model):
+class Profile(db.Model, BasicModel):
     __tablename__ = 'profile'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -57,7 +58,7 @@ items_watchlists = db.Table(
 )
 
 
-class Item(db.Model):
+class Item(db.Model, BasicModel):
     __tablename__ = 'item'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), unique=True)
@@ -68,14 +69,14 @@ class Item(db.Model):
     watchlists = db.relationship('WatchList', secondary=items_watchlists, backref=db.backref('items', lazy='dynamic'))
 
 
-class WatchList(db.Model):
+class WatchList(db.Model, BasicModel):
     __tablename__ = 'watchlist'
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
     profile = db.relationship("Profile", back_populates="watchlist")
 
 
-class Inventory(db.Model):
+class Inventory(db.Model, BasicModel):
     __tablename__ = 'inventory'
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
@@ -85,7 +86,7 @@ class Inventory(db.Model):
     quantity = db.Column(db.Integer, default=0)
 
 
-class Offer(db.Model):
+class Offer(db.Model, BasicModel):
     __tablename__ = 'offer'
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
@@ -98,7 +99,7 @@ class Offer(db.Model):
     is_sell = db.Column(db.Boolean, default=True)
 
 
-class Trade(db.Model):
+class Trade(db.Model, BasicModel):
     __tablename__ = 'trade'
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))

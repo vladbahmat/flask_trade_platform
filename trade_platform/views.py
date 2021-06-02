@@ -5,11 +5,64 @@ from app import db
 from trade_platform import rest_api
 from flask import request, jsonify
 
-from trade_platform.models import User, Currency
-from trade_platform.serializers import UserSerializer, CurrencySerializer
+from trade_platform.models import User, Currency, Profile
+from trade_platform.serializers import (UserSerializer, CurrencySerializer, CurrencyRetrieveSerializer,
+                                        ProfileSerializer)
+from trade_platform.services.user_service import UserService
+from trade_platform.services.profile_service import ProfileService
+from trade_platform.basic_model import BasicModel
+
+
+class ProfileView(Resource):
+    @staticmethod
+    @rest_api.route('/profile', methods=['GET'])
+    @jwt_required()
+    def retrieve_profile():
+        """
+        Endpoint to get currency full info
+        ---
+        parameters:
+          - name: name
+            in: path
+            type: string
+            required: true
+          - name: code
+            in: path
+            type: string
+            required: true
+        """
+        serialized = ProfileSerializer.from_orm(
+                                                Profile.query.filter_by(
+                                                                        user_id=get_jwt_identity()
+                                                                        ).one()
+                                                ).dict()
+
+        return jsonify(serialized), 200
 
 
 class CurrencyView(Resource):
+    @staticmethod
+    @rest_api.route('/currency/<int:id>/', methods=['GET'])
+    @jwt_required()
+    def retrieve_currency(id):
+        """
+        Endpoint to get currency full info
+        ---
+        parameters:
+          - name: name
+            in: path
+            type: string
+            required: true
+          - name: code
+            in: path
+            type: string
+            required: true
+        """
+        currency = Currency.query.filter_by(id=id)
+        serialized = CurrencyRetrieveSerializer.from_orm(currency.one()).dict()
+
+        return jsonify(serialized), 200
+
     @staticmethod
     @rest_api.route('/currency', methods=['POST'])
     @jwt_required()
@@ -27,12 +80,10 @@ class CurrencyView(Resource):
             type: string
             required: true
         """
-        data = request.json
-        currency = Currency(**data)
-        db.session.add(currency)
-        db.session.commit()
+        serialized = CurrencySerializer.parse_obj(request.json).dict()
+        Currency(**serialized).insert()
 
-        return jsonify(CurrencySerializer.from_orm(currency).dict()), 201
+        return jsonify(serialized), 201
 
     @staticmethod
     @rest_api.route('/currency', methods=['GET'])
@@ -65,11 +116,10 @@ class CurrencyView(Resource):
             type: string
             required: true
         """
-        data = request.json
         currency = Currency.query.filter_by(id=id)
-        currency.update(data)
+        currency.update(request.json)
         serialized = CurrencySerializer.from_orm(currency.one()).dict()
-        db.session.commit()
+        BasicModel.update()
 
         return jsonify(serialized), 200
 
@@ -95,19 +145,21 @@ class UserView(Resource):
             type: string
             required: true
         """
-        data = request.json
-        user = User(**data)
-        db.session.add(user)
-        db.session.commit()
+        serialized = UserSerializer.parse_obj(request.json).dict()
+        if UserService.is_unique(serialized['email']):
+            user = User(**serialized).insert()
+            ProfileService.profile_autocreate(user)
+        else:
+            serialized = {"error":"User with this credentials already exists"}
 
-        return jsonify({'username': data['username']}), 201
+        return jsonify(serialized), 201
 
     @staticmethod
     @rest_api.route('/user', methods=['GET'])
     @jwt_required()
     def show_users():
         """
-        Endpoint to show all users
+        Endpoint to get all users
         ---
         parameters:
           - name: access_token
@@ -128,10 +180,7 @@ class UserView(Resource):
           - name: id
             required: true
         """
-        data = request.json
-        user = User.query.filter_by(id=id).delete()
-        db.session.commit()
-
+        User.query.get(id).delete()
         return jsonify(), 204
 
 
@@ -160,11 +209,10 @@ class UserView(Resource):
             type: string
             required: false
         """
-        data = request.json
         user = User.query.filter_by(id=id)
-        user.update(data)
+        user.update(request.json)
         serialized = UserSerializer.from_orm(user.one()).dict()
-        db.session.commit()
+        BasicModel.update()
 
         return jsonify(serialized), 200
 
@@ -184,9 +232,6 @@ class UserView(Resource):
             type: string
             required: true
         """
-        data = request.json
-        user = User.authenticate(**data)
-        print(user)
-        token = user.get_token()
+        token = User.authenticate(**request.json).get_token()
 
         return jsonify({'access_token':token}), 200
