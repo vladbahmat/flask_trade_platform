@@ -1,5 +1,5 @@
 from app import db
-from trade_platform import BasicModel
+from trade_platform.models.basic_model import BasicModel
 
 
 class WatchList(db.Model, BasicModel):

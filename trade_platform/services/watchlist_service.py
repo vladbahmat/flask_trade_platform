@@ -1,4 +1,4 @@
-from trade_platform.models import Profile, WatchList
+from trade_platform.models import WatchList
 
 class WatchListService():
     @staticmethod

@@ -1,4 +1,4 @@
-from trade_platform.models import Currency, User, Profile
+from trade_platform.models import Profile
 
 class ProfileService():
     @staticmethod

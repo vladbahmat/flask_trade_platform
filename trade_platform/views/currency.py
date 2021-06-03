@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 
 from trade_platform import rest_api
-from trade_platform.basic_model import BasicModel
+from trade_platform.models.basic_model import BasicModel
 from trade_platform.models import Currency
 from trade_platform.serializers import CurrencyRetrieveSerializer, CurrencySerializer
 

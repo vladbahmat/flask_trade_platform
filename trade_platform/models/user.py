@@ -3,7 +3,7 @@ from datetime import timedelta
 from flask_jwt_extended import create_access_token
 
 from app import db
-from trade_platform import BasicModel
+from trade_platform.models.basic_model import BasicModel
 
 
 class User(db.Model, BasicModel):
