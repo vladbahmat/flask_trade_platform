@@ -4,4 +4,6 @@ class ProfileService():
     @staticmethod
     def profile_autocreate(user):
         data = {"user":user}
-        Profile(**data).insert()
+        profile = Profile(**data).insert()
+
+        return profile

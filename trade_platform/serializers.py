@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class UserSerializer(BaseModel):
     username:str
@@ -34,3 +35,12 @@ class ProfileSerializer(BaseModel):
     class Config:
         orm_mode = True
 
+
+class ItemSerializer(BaseModel):
+    name: str
+    code: str
+    currency_id: int
+    description: Optional[str]
+
+    class Config:
+        orm_mode = True

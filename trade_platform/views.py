@@ -1,25 +1,25 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 
-from app import db
 from trade_platform import rest_api
 from flask import request, jsonify
 
-from trade_platform.models import User, Currency, Profile
+from trade_platform.models import User, Currency, Profile, Item
 from trade_platform.serializers import (UserSerializer, CurrencySerializer, CurrencyRetrieveSerializer,
-                                        ProfileSerializer)
+                                        ProfileSerializer, ItemSerializer)
 from trade_platform.services.user_service import UserService
 from trade_platform.services.profile_service import ProfileService
+from trade_platform.services.watchlist_service import WatchListService
 from trade_platform.basic_model import BasicModel
 
 
-class ProfileView(Resource):
+class WatchListView(Resource):
     @staticmethod
-    @rest_api.route('/profile', methods=['GET'])
+    @rest_api.route('/item', methods=['POST'])
     @jwt_required()
-    def retrieve_profile():
+    def add_watchlist():
         """
-        Endpoint to get currency full info
+        Endpoint to register new trade_platform
         ---
         parameters:
           - name: name
@@ -30,12 +30,125 @@ class ProfileView(Resource):
             in: path
             type: string
             required: true
+          - name: currency_id
+            in: path
+            type: int
+            required: true
+          - name: description
+            in: path
+            type: str
+            required: false
         """
-        serialized = ProfileSerializer.from_orm(
-                                                Profile.query.filter_by(
-                                                                        user_id=get_jwt_identity()
-                                                                        ).one()
-                                                ).dict()
+        serialized = ItemSerializer.parse_obj(request.json).dict()
+        Item(**serialized).insert()
+
+        return jsonify(serialized), 201
+
+
+class ItemView(Resource):
+    @staticmethod
+    @rest_api.route('/item', methods=['GET'])
+    @jwt_required()
+    def list_item():
+        """
+        Endpoint to get item list
+        ---
+        parameters:
+          - name: access_token
+        """
+        serialized = [ItemSerializer.from_orm(item).dict() for item in Item.query.all()]
+
+        return jsonify(serialized), 200
+
+    @staticmethod
+    @rest_api.route('/item/<int:id>/', methods=['DELETE'])
+    @jwt_required()
+    def delete_item(id):
+        """
+        Endpoint to delete item
+        ---
+        parameters:
+          - name: id
+            required: true
+        """
+        Item.query.get(id).delete()
+        return jsonify(), 204
+
+    @staticmethod
+    @rest_api.route('/item', methods=['POST'])
+    @jwt_required()
+    def add_item():
+        """
+        Endpoint to register new trade_platform
+        ---
+        parameters:
+          - name: name
+            in: path
+            type: string
+            required: true
+          - name: code
+            in: path
+            type: string
+            required: true
+          - name: currency_id
+            in: path
+            type: int
+            required: true
+          - name: description
+            in: path
+            type: str
+            required: false
+        """
+        serialized = ItemSerializer.parse_obj(request.json).dict()
+        Item(**serialized).insert()
+
+        return jsonify(serialized), 201
+
+    @staticmethod
+    @rest_api.route('/item/<int:id>/', methods=['PATCH'])
+    @jwt_required()
+    def update_item(id):
+        """
+        Endpoint to edit item
+        ---
+        parameters:
+          - name: name
+            in: path
+            type: string
+            required: false
+          - name: code
+            in: path
+            type: string
+            required: false
+          - name: currency_id
+            in: path
+            type: int
+            required: false
+          - name: description
+            in: path
+            type: str
+            required: false
+        """
+        item = Item.query.filter_by(id=id)
+        item.update(request.json)
+        serialized = ItemSerializer.from_orm(item.one()).dict()
+        BasicModel.update()
+
+        return jsonify(serialized), 200
+
+
+class ProfileView(Resource):
+    @staticmethod
+    @rest_api.route('/profile', methods=['GET'])
+    @jwt_required()
+    def retrieve_profile():
+        """
+        Endpoint to get info about current user profile
+        ---
+        parameters:
+          - name: access_token
+        """
+        serialized = ProfileSerializer.from_orm(Profile.query.filter_by(user_id=get_jwt_identity()).one()).dict()
 
         return jsonify(serialized), 200
 
@@ -148,7 +261,7 @@ class UserView(Resource):
         serialized = UserSerializer.parse_obj(request.json).dict()
         if UserService.is_unique(serialized['email']):
             user = User(**serialized).insert()
-            ProfileService.profile_autocreate(user)
+            WatchListService.watchlist_autocreate(ProfileService.profile_autocreate(user))
         else:
             serialized = {"error":"User with this credentials already exists"}
 
